@@ -7,12 +7,15 @@ import java.io.IOException;
 public class Main {
     public static void main(String[] args) {
         String midiFile1 = "MIDI/Michael_Jackson_-_Billie_Jean.mid";
-        String midiFile2 = "MIDI/Movie_Themes_-_Beetlejuice_-_by_Danny_Elfman.mid";
+        String midiFile2 = "MIDI/mansion_of_the_twilight_pickle.mid";
 
         try {
+            //Ottengo le sequenze MIDI, ovvero il contenuto musicale dei due file
+            //Questo include anche i vari eventi ed i messaggi musicali
             Sequence sequence1 = MidiSystem.getSequence(new File(midiFile1));
             Sequence sequence2 = MidiSystem.getSequence(new File(midiFile2));
 
+            //Eseguo la mia funzione
             float duration1 = calculateTotalNoteDuration(sequence1);
             float duration2 = calculateTotalNoteDuration(sequence2);
 
@@ -59,3 +62,4 @@ public class Main {
         return similarity;
     }
 }
+
