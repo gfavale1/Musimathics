@@ -1,15 +1,6 @@
 package org.example;
 
-import org.jfugue.midi.MidiParser;
-import org.jfugue.pattern.NoteProducer;
-import org.jfugue.theory.Note;
-
 import javax.sound.midi.*;
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Pattern;
 
 public class Main {
     public static void main(String[] args) {
