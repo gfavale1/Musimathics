@@ -4,14 +4,10 @@ import javax.sound.midi.*;
 
 public class Main {
     public static void main(String[] args) {
-        // Sostituisci questi percorsi con i file MIDI che vuoi convertire
-        String midiFile1 = "MIDI/Michael_Jackson_-_Beat_It.mid";
-        String midiFile2 = "MIDI/Movie_Themes_-_Conan_The_Barbarian.mid";
+        String midiFile1 = "MIDI/sum_41still_waiting.mid";
+        String midiFile2 = "MIDI/sum_41still_waiting_bad_quality.mid";
         String sequence1 = convertMidiToSequenceString(midiFile1);
         String sequence2 = convertMidiToSequenceString(midiFile2);
-
-        System.out.println(sequence1);
-        System.out.println(sequence2);
 
         int editDistance = computeEDOptimized(sequence1, sequence2);
         float similarity = calculateSimilarity(sequence1, sequence2);
@@ -46,7 +42,7 @@ public class Main {
     }
 
     public static float calculateSimilarity(String m1, String m2) {
-        int editDistance = computeED(m1, m2);
+        int editDistance = computeEDOptimized(m1, m2);
 
         // Calcola la lunghezza massima delle due sequenze
         int maxLength = Math.max(m1.length(), m2.length());
