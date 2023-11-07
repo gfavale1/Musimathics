@@ -7,7 +7,7 @@ public class GuiStarter {
         FileUpload fileUpload = new FileUpload();
         fileUpload.setDefaultCloseOperation(EXIT_ON_CLOSE);
         fileUpload.setTitle("Carica");
-        fileUpload.setSize(400, 400);
+        fileUpload.setSize(400, 300);
         fileUpload.setResizable(false);
         fileUpload.setVisible(true);
     }
