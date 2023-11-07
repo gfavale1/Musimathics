@@ -10,6 +10,9 @@ public class Main {
         String sequence1 = convertMidiToSequenceString(midiFile1);
         String sequence2 = convertMidiToSequenceString(midiFile2);
 
+        System.out.println(sequence1);
+        System.out.println(sequence2);
+
         // int editDistance = computeED(sequence1, sequence2) -> produce lo stesso output della versione ottimizzata
         int editDistance = computeEDOptimized(sequence1, sequence2);
         // Calcolo la similarità tra le due sequenze
@@ -75,7 +78,7 @@ public class Main {
 
     /*
         Algoritmo di calcolo della editDistance, rifacendoci al problema della editDistance tra 2 stringhe studiato durante
-        Progettazione di Algoritmi, e presentatosi in Musimatica. Il problema consiste nel calcolare il minimo numero di op. di
+        Progettazione di Algoritmi, e ripresentatosi in Musimatica. Il problema consiste nel calcolare il minimo numero di op. di
         inserimento, cancellazione e sostituzione, effettuate per trasformare una delle stringhe nell'altra. Informazioni sul funzionamento
         dell'algoritmo contenute nel codice stesso.
      */
@@ -159,6 +162,7 @@ public class Main {
                     d[i][j] = Math.min(Math.min(insert, delete), substitute);
                 }
             }
+
         }
         return d[len1][len2];
     }
