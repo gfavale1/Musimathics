@@ -4,7 +4,7 @@ import javax.sound.midi.*;
 
 public class Main {
     public static void main(String[] args) {
-        String midiFile1 = "MIDI/Movie_Themes_-_Conan_The_Barbarian.mid";
+        String midiFile1 = "MIDI/12.mid";
         String midiFile2 = "MIDI/12.mid";
         // Converto i due file MIDI in stringhe
         String sequence1 = convertMidiToSequenceString(midiFile1);
