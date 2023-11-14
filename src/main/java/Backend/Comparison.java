@@ -1,104 +1,44 @@
-package org.example;
+package Backend;
 
 import javax.sound.midi.*;
-import javax.swing.*;
-import java.awt.*;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 
-public class MIDIAnalysis extends JFrame {
-    private JTextField textField1;
-    private JTextField textField2;
-    private JProgressBar progressBar;
-    private JButton calculateButton = new JButton("Calcola Similarità");
-    private JLabel similarityLabel;
-    private JLabel timeLabel;
+public class Comparison {
+    private String path1;
+    private String path2;
 
-
-    public MIDIAnalysis(String path1, String path2) {
-        String[] token1 = path1.split("\\\\");
-        String[] token2 = path2.split("\\\\");
-
-        JTextField textField1 = new JTextField(token1[token1.length - 1], 20);
-        textField1.setEditable(false);
-        textField1.setFocusable(false);
-
-        JTextField textField2 = new JTextField(token2[token2.length - 1], 20);
-        textField2.setEditable(false);
-        textField2.setFocusable(false);
-
-        progressBar = new JProgressBar(0, 100);
-        similarityLabel = new JLabel("Similarità: ");
-        timeLabel = new JLabel("Tempo trascorso: ");
-
-
-        GroupLayout layout = new GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-
-        layout.setHorizontalGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                                .addComponent(textField1)
-                                .addComponent(textField2)
-                                .addComponent(progressBar)
-                                .addComponent(similarityLabel)  // Aggiunto il JLabel alla parte orizzontale
-                                .addComponent(timeLabel)  // Aggiunto il JLabel per il tempo trascorso
-                                .addComponent(calculateButton, GroupLayout.DEFAULT_SIZE,
-                                        GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addContainerGap())
-        );
-        layout.setVerticalGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(textField1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-                                GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(textField2, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-                                GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(progressBar, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-                                GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(similarityLabel)  // Aggiunto il JLabel alla parte verticale
-                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(timeLabel)  // Aggiunto il JLabel per il tempo trascorso
-                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(calculateButton)
-                        .addContainerGap())
-        );
-
-        calculateButton.addActionListener(e -> execution(path1, path2));
+    public Comparison(String path1, String path2) {
+        this.path1 = path1;
+        this.path2 = path2;
     }
 
-    public void execution(String path1, String path2) {
-        long startTime = System.currentTimeMillis();
-        String sequence1 = convertMidiToSequenceString(path1);
-        String sequence2 = convertMidiToSequenceString(path2);
-        int editDistance = computeEDOptimized(sequence1, sequence2);
-        float similarity = calculateSimilarity(sequence1, sequence2);
+    public String getPath1() {
+        return path1;
+    }
 
-        similarityLabel.setText("Similarità pari a: " + similarity + "%");
+    public void setPath1(String path1) {
+        this.path1 = path1;
+    }
 
-        progressBar.setValue((int)similarity);
-        Color color = getColorForSimilarity(similarity);
-        progressBar.setForeground(color);
+    public String getPath2() {
+        return path2;
+    }
 
-        long endTime = System.currentTimeMillis();
-        long elapsedTime = endTime - startTime;
-        timeLabel.setText("Tempo trascorso: " + (double) elapsedTime/1000.0 + " secondi.");
+    public void setPath2(String path2) {
+        this.path2 = path2;
     }
 
     /*
         Calcolo la similarità dei due brani basandomi sulla editDistance tra i due, ed effettuare un'op. di
         conversione in virgola mobile float, piuttosto che double.
      */
-    public static float calculateSimilarity(String m1, String m2) {
+    public float calculateSimilarity(String m1, String m2) {
         int editDistance = computeEDOptimized(m1, m2);
 
         // Calcola la lunghezza massima delle due sequenze
-        int maxLength = (m1.length() > m2.length()) ? m1.length() : m2.length();
+        int maxLength = Math.max(m1.length(), m2.length());
 
         // Calcola la similarità basata sull'inverso della distanza di edit normalizzata
         // (Partendo da sinistra a destra) Converto l'inverso in un valoce perc., moltiplicando per 100.0f
@@ -107,6 +47,7 @@ public class MIDIAnalysis extends JFrame {
         float similarity = 100.0f * (1.0f - (float) editDistance / maxLength);
         DecimalFormat decimalFormat = new DecimalFormat("0.00");
         String formattedSimilarity = decimalFormat.format(similarity);
+
         try {
             Number number = decimalFormat.parse(formattedSimilarity);
             similarity = number.floatValue();
@@ -118,7 +59,14 @@ public class MIDIAnalysis extends JFrame {
         return similarity;
     }
 
-    public static String convertMidiToSequenceString(String midiFilePath) {
+    /*
+        Faccio uso del campo data1 all'interno del file MIDI per poterne estrapolare le note ed elaborarle.
+        Utilizzo una rappresentazione del tipo "pitch:durata", separati da uno spazio; in caso di errore restituisco una strigna vuota.
+        Spiegando meglio la notazione: se il pitch di una nota è 60 e la sua durata -> 60:200; ogni coppia con questa rappresentazione
+        dovrebbe essere univoca, in quanto in grado di specificare con un certo pitch ed una certa durata una nota.
+     */
+
+    public String convertMidiToSequenceString(String midiFilePath) {
         try {
             // Carica la sequenza MIDI dal file specificato
             Sequence sequence = MidiSystem.getSequence(new java.io.File(midiFilePath));
@@ -176,10 +124,10 @@ public class MIDIAnalysis extends JFrame {
         inserimento, cancellazione e sostituzione, effettuate per trasformare una delle stringhe nell'altra. Informazioni sul funzionamento
         dell'algoritmo contenute nel codice stesso.
      */
-    public static int computeEDOptimized(String m1, String m2) {
+    public int computeEDOptimized(String m1, String m2) {
         int len1 = m1.length();
         int len2 = m2.length();
-        int maxLen = (len1 > len2) ? len1 : len2;
+        int maxLen = Math.max(len1, len2);
         // Creo una matrice, ma con una dimensione spaziale molto minore (uso solo 2 righe)
         // Vado quindi a creare una matrice 2xN: N è identificata come la lunghezza massima tra le due sequenze
         int[][] d = new int[2][maxLen + 1];
@@ -226,14 +174,37 @@ public class MIDIAnalysis extends JFrame {
         // Uso quindi 'len1 % 2' per accedere alla editDistance finale (Restituirà sempre 0 o 1) -> Seleziono la riga corrente o precedente in base all'iterazione corrente
         return d[len1 % 2][len2];
     }
-    private Color getColorForSimilarity(double similarity) {
-        if (similarity >= 70) {
-            return Color.GREEN;
-        } else if (similarity >= 40) {
-            return Color.YELLOW;
-        } else {
-            return Color.RED;
+
+    /*
+        Algoritmo di caldolo di editDistance proposto dal prof.
+     */
+    public int computeED(String m1, String m2) {
+        int len1 = m1.length();
+        int len2 = m2.length();
+        int[][] d = new int[len1 + 1][len2 + 1];
+
+        for (int i = 0; i <= len1; i++) {
+            d[i][0] = i;
         }
+
+        for (int j = 0; j <= len2; j++) {
+            d[0][j] = j;
+        }
+
+        for (int i = 1; i <= len1; i++) {
+            for (int j = 1; j <= len2; j++) {
+                if (m1.charAt(i - 1) == m2.charAt(j - 1)) {
+                    d[i][j] = d[i - 1][j - 1];
+                } else {
+                    int insert = d[i][j - 1] + 1;
+                    int delete = d[i - 1][j] + 1;
+                    int substitute = d[i - 1][j - 1] + 1;
+
+                    d[i][j] = Math.min(Math.min(insert, delete), substitute);
+                }
+            }
+
+        }
+        return d[len1][len2];
     }
 }
-

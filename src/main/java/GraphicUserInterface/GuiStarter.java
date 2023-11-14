@@ -1,4 +1,4 @@
-package org.example;
+package GraphicUserInterface;
 import javax.swing.*;
 
 import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
@@ -11,7 +11,9 @@ public class GuiStarter {
                  | UnsupportedLookAndFeelException e) {
             e.printStackTrace();
         }
+
         FileUpload fileUpload = new FileUpload();
+
         fileUpload.setDefaultCloseOperation(EXIT_ON_CLOSE);
         fileUpload.setTitle("Carica");
         fileUpload.setSize(300, 100);
