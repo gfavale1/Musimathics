@@ -4,7 +4,7 @@ import javax.swing.*;
 import java.io.File;
 
 public class FileUpload extends JFrame {
-    private JLabel label = new JLabel("Inserisci due track MIDI:");
+    private JLabel label = new JLabel("Inserisci due file MIDI:");
     private JButton uploadButton = new JButton("Carica File");
     private JPanel panel = new JPanel();
 
@@ -53,7 +53,7 @@ public class FileUpload extends JFrame {
 
                         midiAnalysis.setDefaultCloseOperation(EXIT_ON_CLOSE);
                         midiAnalysis.setTitle("Similarity calculator");
-                        midiAnalysis.setSize(450, 200);
+                        midiAnalysis.setSize(450, 225);
                         midiAnalysis.setResizable(false);
                         midiAnalysis.setLocationRelativeTo(null);
                         midiAnalysis.setVisible(true);
