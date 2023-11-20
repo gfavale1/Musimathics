@@ -11,6 +11,6 @@ Il progetto "Musimathics" ha l'obiettivo di esplorare l'intersezione tra musica 
 
 # Come Iniziare
 Per utilizzare il progetto, seguire questi passaggi:
-- Clonare il repository sul proprio ambiente di sviluppo.
+- Clonare la repository sul proprio ambiente di sviluppo.
 - Importare il progetto in un ambiente di sviluppo Java
 - Eseguire l'applicazione e utilizzare l'interfaccia grafica per caricare e analizzare file MIDI.
