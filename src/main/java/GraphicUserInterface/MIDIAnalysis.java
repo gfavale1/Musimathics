@@ -105,7 +105,6 @@ public class MIDIAnalysis extends JFrame {
         Comparison comparison = new Comparison(path1, path2);
         String sequence1 = comparison.convertMidiToSequenceString(path1);
         String sequence2 = comparison.convertMidiToSequenceString(path2);
-        int editDistance = comparison.computeEDOptimized(sequence1, sequence2);
         float similarity = comparison.calculateSimilarity(sequence1, sequence2);
 
         similarityLabel.setText("Similarità pari a: " + similarity + "%");

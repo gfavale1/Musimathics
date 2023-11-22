@@ -62,7 +62,7 @@ public class Comparison {
     /*
         Faccio uso del campo data1 all'interno del file MIDI per poterne estrapolare le note ed elaborarle.
         Utilizzo una rappresentazione del tipo "pitch:durata", separati da uno spazio; in caso di errore restituisco una strigna vuota.
-        Spiegando meglio la notazione: se il pitch di una nota è 60 e la sua durata -> 60:200; ogni coppia con questa rappresentazione
+        Spiegando meglio la notazione: se il pitch di una nota è 60 e la sua durata 200 -> 60:200; ogni coppia con questa rappresentazione
         dovrebbe essere univoca, in quanto in grado di specificare con un certo pitch ed una certa durata una nota.
      */
 
