@@ -1,6 +1,7 @@
 package Backend;
 
 import javax.sound.midi.*;
+import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -60,27 +61,85 @@ public class Comparison {
     }
 
     /*
-        Faccio uso del campo data1 all'interno del file MIDI per poterne estrapolare le note ed elaborarle.
-        Utilizzo una rappresentazione del tipo "pitch:durata", separati da uno spazio; in caso di errore restituisco una strigna vuota.
-        Spiegando meglio la notazione: se il pitch di una nota è 60 e la sua durata 200 -> 60:200; ogni coppia con questa rappresentazione
-        dovrebbe essere univoca, in quanto in grado di specificare con un certo pitch ed una certa durata una nota.
+        Per ciascun evento MIDI di tipo ShortMessage, estrae le informazioni della nota come il pitch, l'ottava, la velocità e il tick dell'evento.
+        Queste informazioni vengono concatenate in una stringa utilizzando la notazione "pitch:ottava:velocità:tick" e separate da :.
+        Se un evento rappresenta l'inizio di una nota, memorizza il tick dell'evento. Se rappresenta la fine di una nota, calcola la durata della nota e la aggiunge alla sequenza.
+        Alla fine, restituisce la sequenza di stringhe rappresentanti le note MIDI nel file. (RAPPRESENTAZIONE PIU COMPLESSA MA PIU ACCURATA)
      */
 
+
+    public String convertMidiToSequenceString(String midiFilePath) {
+        StringBuilder sequenceBuilder = new StringBuilder();
+
+        try {
+            Sequence sequence = MidiSystem.getSequence(new File(midiFilePath));
+
+            // Itera su tutte le tracce nella sequenza MIDI
+            for (Track track : sequence.getTracks()) {
+                long noteOnTick = -1;  // Memorizza il tick dell'evento di inizio nota
+
+                // Itera su tutti gli eventi nella traccia corrente
+                for (int i = 0; i < track.size(); i++) {
+                    // Ottiene l'evento corrente
+                    MidiEvent event = track.get(i);
+                    // Ottiene il messaggio MIDI associato all'evento
+                    MidiMessage message = event.getMessage();
+
+                    // Verifica se il messaggio è di tipo ShortMessage (nota MIDI)
+                    if (message instanceof ShortMessage) {
+                        // Ottiene i dettagli del messaggio di tipo ShortMessage
+                        ShortMessage sm = (ShortMessage) message;
+                        int command = sm.getCommand();  // Ottiene il comando MIDI
+                        int data1 = sm.getData1();      // Ottiene il primo byte dei dati MIDI
+                        int note = data1 % 12;          // Calcola il pitch della nota nell'ottava
+                        int octave = data1 / 12 - 1;    // Ottiene l'ottava della nota
+                        int velocity = sm.getData2();   // Ottiene la velocità della nota
+
+                        // Se è un evento di inizio nota (NOTE_ON) con velocità maggiore di 0
+                        if (command == ShortMessage.NOTE_ON && velocity > 0) {
+                            // Memorizza il tick dell'evento di inizio nota
+                            noteOnTick = event.getTick();
+                            // Aggiunge la rappresentazione della nota al StringBuilder
+                            sequenceBuilder.append(note).append(":").append(octave).append(":").append(velocity).append(":").append(event.getTick()).append(" ");
+                        } else if ((command == ShortMessage.NOTE_OFF || (command == ShortMessage.NOTE_ON && velocity == 0)) && noteOnTick >= 0) {
+                            // Se è un evento di fine nota o di rilascio e c'è un evento di inizio nota precedente
+                            // Calcola la durata della nota sottraendo il tick di inizio nota dal tick corrente
+                            int duration = (int) (event.getTick() - noteOnTick);
+                            // Aggiunge la durata della nota al StringBuilder
+                            sequenceBuilder.append(duration).append(" ");
+                            noteOnTick = -1;  // Reimposta il tick dell'evento di inizio nota
+                        }
+                    }
+                }
+            }
+        } catch (InvalidMidiDataException | IOException e) {
+            e.printStackTrace();  // Gestisce le eccezioni
+        }
+
+        // Restituisce la rappresentazione della sequenza musicale come stringa
+        return sequenceBuilder.toString();
+    }
+
+
+    /*
+        Per ogni evento MIDI di tipo ShortMessage, le informazioni della nota, come il pitch, l'ottava e il tick dell'evento, vengono concatenate in una stringa utilizzando la notazione "pitch:ottava:durata" e separate da ":".
+        Se un evento rappresenta l'inizio di una nota, viene memorizzato il tick dell'evento. Se rappresenta la fine di una nota, viene calcolata la durata della nota e aggiunta alla sequenza.
+        Infine, restituisce la sequenza di stringhe rappresentanti le note MIDI nel file. (MENO COMPLESSA ED ACCURATA MA PIU VELOCE).
+     */
+
+    /*
     public String convertMidiToSequenceString(String midiFilePath) {
         try {
-            // Carica la sequenza MIDI dal file specificato
             Sequence sequence = MidiSystem.getSequence(new java.io.File(midiFilePath));
 
-            // Ottieni tutte le tracce nella sequenza MIDI
             Track[] tracks = sequence.getTracks();
 
-            // StringBuilder per costruire la rappresentazione della sequenza musicale
             StringBuilder sequenceBuilder = new StringBuilder();
 
-            // Itera su tutte le tracce
             for (Track track : tracks) {
                 long noteOnTick = -1;  // Memorizza il tick dell'evento di inizio nota
                 int lastNote = -1;     // Memorizza l'ultimo pitch della nota
+                int lastOctave = -1;   // Memorizza l'ultima ottava della nota
 
                 // Itera su tutti gli eventi nella traccia corrente
                 for (int i = 0; i < track.size(); i++) {
@@ -91,32 +150,34 @@ public class Comparison {
                     if (message instanceof ShortMessage) {
                         ShortMessage sm = (ShortMessage) message;
                         int data1 = sm.getData1();  // Ottiene il pitch della nota
+                        int note = data1 % 12;       // Calcola il pitch della nota nell'ottava
+                        int octave = data1 / 12 - 1; // Ottiene l'ottava della nota
 
                         // Se è un evento di inizio nota (NOTE_ON) con velocità maggiore di 0
                         if (sm.getCommand() == ShortMessage.NOTE_ON && sm.getData2() > 0) {
                             noteOnTick = event.getTick();  // Memorizza il tick dell'evento di inizio nota
-                            lastNote = data1;              // Memorizza il pitch della nota corrente
+                            lastNote = note;               // Memorizza il pitch della nota corrente
+                            lastOctave = octave;           // Memorizza l'ottava della nota corrente
                         } else if (sm.getCommand() == ShortMessage.NOTE_OFF || (sm.getCommand() == ShortMessage.NOTE_ON && sm.getData2() == 0)) {
                             // Se è un evento di fine nota o di rilascio
                             if (noteOnTick >= 0) {
                                 // Calcola la durata della nota sottraendo il tick di inizio nota dal tick corrente
                                 int duration = (int) (event.getTick() - noteOnTick);
                                 // Aggiunge la rappresentazione della nota al StringBuilder
-                                sequenceBuilder.append(lastNote).append(":").append(duration).append(" ");
+                                sequenceBuilder.append(lastNote).append(":").append(lastOctave).append(":").append(duration).append(" ");
                                 noteOnTick = -1;  // Reimposta il tick dell'evento di inizio nota
                             }
                         }
                     }
                 }
             }
-
-            // Restituisce la rappresentazione della sequenza musicale come stringa
             return sequenceBuilder.toString().trim();
         } catch (InvalidMidiDataException | IOException e) {
-            e.printStackTrace();  // Gestisce le eccezioni
-            return "";  // Restituisce una stringa vuota in caso di errore
+            e.printStackTrace();
+            return "";
         }
     }
+    */
 
     /*
         Algoritmo di calcolo della editDistance, rifacendoci al problema della editDistance tra 2 stringhe studiato durante
